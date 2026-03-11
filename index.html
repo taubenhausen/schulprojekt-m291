@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Dino Game</title>
+  <style>
+    body { background: #fff; display: flex; justify-content: center; 
+           align-items: center; height: 100vh; margin: 0; font-family: Arial; }
+    canvas { border-bottom: 3px solid #535353; }
+    #score { position: absolute; top: 20px; right: 40px; 
+             font-size: 20px; color: #535353; }
+    #msg { position: absolute; font-size: 18px; color: #535353; }
+  </style>
+</head>
+<body>
+<div id="score">0</div>
+<div id="msg">Leertaste zum Starten</div>
+<canvas id="c" width="800" height="300"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+
+let score = 0, speed = 6, running = false, raf;
+
+const dino = { x: 80, y: 250, w: 40, h: 50, vy: 0, jumping: false,
+  draw() {
+    ctx.fillStyle = '#535353';
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+    // Kopf
+    ctx.fillRect(this.x + 20, this.y - 20, 25, 20);
+    // Auge
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(this.x + 36, this.y - 17, 6, 6);
+  },
+  jump() { if (!this.jumping) { this.vy = -15; this.jumping = true; } },
+  update() {
+    this.vy += 0.8;
+    this.y += this.vy;
+    if (this.y >= 250) { this.y = 250; this.vy = 0; this.jumping = false; }
+  }
+};
+
+let cacti = [];
+let frameCount = 0;
+
+function spawnCactus() {
+  const h = 40 + Math.random() * 30;
+  cacti.push({ x: 800, y: 300 - h, w: 20, h });
+}
+
+function checkCollision(c) {
+  return dino.x + 5 < c.x + c.w && dino.x + dino.w - 5 > c.x &&
+         dino.y + 5 < c.y + c.h && dino.y + dino.h > c.y;
+}
+
+function gameOver() {
+  running = false;
+  cancelAnimationFrame(raf);
+  msgEl.textContent = `Game Over! Score: ${score} — Leertaste für Neustart`;
+  cacti = []; score = 0; speed = 6; frameCount = 0;
+  scoreEl.textContent = '0';
+}
+
+function loop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  frameCount++;
+  score++;
+  scoreEl.textContent = score;
+  if (score % 200 === 0) speed += 0.5;
+
+  if (frameCount % Math.max(60 - Math.floor(score/200), 30) === 0) spawnCactus();
+
+  dino.update();
+  dino.draw();
+
+  cacti.forEach(c => {
+    c.x -= speed;
+    ctx.fillStyle = '#535353';
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    // Kaktus-Arme
+    ctx.fillRect(c.x - 8, c.y + 8, 8, 10);
+    ctx.fillRect(c.x + c.w, c.y + 12, 8, 10);
+    if (checkCollision(c)) gameOver();
+  });
+
+  cacti = cacti.filter(c => c.x > -30);
+  raf = requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!running) { running = true; msgEl.textContent = ''; loop(); }
+    else dino.jump();
+  }
+});
+
+// Mobile Touch
+canvas.addEventListener('touchstart', () => {
+  if (!running) { running = true; msgEl.textContent = ''; loop(); }
+  else dino.jump();
+});
+</script>
+</body>
+</html>
