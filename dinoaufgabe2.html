@@ -46,14 +46,13 @@
       }
  
       .jump-animation {
-        animation: jump 1.5s;
-      }
+        animation: jump 1s cubic-bezier(0.33, 0, 0.66, 1);
+      }}
  
       @keyframes jump {
-        0%   { top: 225px; }
-        30%  { top: 75px; }
-        70%  { top: 75px; }
-        100% { top: 225px; }
+        0%   { top: 200px; animation-timing-function: ease-out; } /* schnell nach oben */
+        40%  { top: 60px;  animation-timing-function: ease-in; }  /* kurz oben bleiben */
+        100% { top: 200px; }                                       /* langsam fallen, dann schneller */
       }
  
       /* Start Button Styling */
